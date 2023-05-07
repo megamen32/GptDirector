@@ -29,14 +29,16 @@ def check_language(text):
 # Отправьте запрос к ChatGPT API
 async def chatgpt_request(prompt):
     openai.api_key = CHATGPT_API_KEY
-    response=await openai.Completion.acreate(
+    response=await openai.ChatCompletion.acreate(
         model="gpt-3.5-turbo",
-        prompt=prompt,
+        messages=[
+            {"role": "system", "content": "You are popular blogger that rewrites and explain scenario on russian language, as it was for children"},
+            {"role": "user", "content": prompt}],
         temperature=0.8,
         max_tokens=800,
         n=1,
     )
-    res = response['choices'][0]['text']
+    res = response['choices'][0]['message']['content']
 
     return res
 
@@ -76,7 +78,7 @@ async def process_youtube_shorts(message: types.Message):
 
         prompt = f"Вот транскрипция видео: {transcript_text}. " \
                   "Теперь переведи на русский и перескажи его для детей от лица блогера:"
-        gpt_response = await chatgpt_request(prompt)
+        gpt_response = await chatgpt_request(transcript_text)
         await msg.edit_text(transcript_text+'\n____\n'+gpt_response)
 
         video_path= await video_path_task
