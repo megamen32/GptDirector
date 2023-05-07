@@ -32,7 +32,7 @@ async def chatgpt_request(prompt):
     response=await openai.ChatCompletion.acreate(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are popular blogger that rewrites and explain scenario on russian language, as it was for children"},
+            {"role": "system", "content": "You are a popular blogger who rewrites scenarios in Russian and explains them for children"},
             {"role": "user", "content": prompt}],
         temperature=0.8,
         max_tokens=800,

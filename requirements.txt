@@ -1,0 +1,6 @@
+requests~=2.30.0
+openai~=0.27.6
+aiogram~=2.25.1
+pydub~=0.25.1
+langdetect~=1.0.9
+beautifulsoup4~=4.12.2

@@ -1,5 +1,7 @@
 import os
 import tempfile
+
+import langdetect
 import youtube_dl
 import speech_recognition as sr
 from pydub import AudioSegment
@@ -35,6 +37,17 @@ async def download_video(video_id,message):
 
     return video_path
 
+import requests
+from bs4 import BeautifulSoup
+
+def get_video_description(video_id):
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    description_element = soup.find("title")
+    description = description_element.text.strip() if description_element else ""
+    return description
+
 def download_audio_and_transcribe(video_id):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
         temp_file_path = 'out.webm'
@@ -57,11 +70,25 @@ def download_audio_and_transcribe(video_id):
             with sr.AudioFile("temp.wav") as source:
                 audio_data = recognizer.record(source)
 
-            # First, try to recognize speech in English
             try:
-                text = recognizer.recognize_google(audio_data, language='en-US', show_all=False)
+                description = get_video_description(video_id)
+                lang = langdetect.detect(description)
             except:
-                text = recognizer.recognize_google(audio_data, language='ru-RU', show_all=False)
+                lang = None
+
+                # If the language is not detected or it is not English, try to recognize speech in Russian
+            if lang != 'en':
+                try:
+                    text = recognizer.recognize_google(audio_data, language='ru-RU', show_all=False)
+                except:
+                    text = recognizer.recognize_google(audio_data, language='en-US', show_all=False)
+
+                # If the language is detected as English, recognize speech in English
+            else:
+                try:
+                    text = recognizer.recognize_google(audio_data, language='en-US', show_all=False)
+                except:
+                    text = recognizer.recognize_google(audio_data, language='ru-RU', show_all=False)
 
             return text
 
