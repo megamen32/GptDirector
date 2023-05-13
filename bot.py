@@ -32,10 +32,10 @@ async def chatgpt_request(prompt):
     response=await openai.ChatCompletion.acreate(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are popular blogger that rewrites and explain scenario in russian language, as it was for children. Пиши на русском."},
-            {"role": "user", "content": prompt}],
+            {"role": "system", "content": "You are popular blogger that explain scenario in russian language, as it was for children. Пиши на русском."},
+            {"role": "assistant", "content": prompt}],
         temperature=0.8,
-        max_tokens=800,
+        max_tokens=400,
         n=1,
     )
     res = response['choices'][0]['message']['content']
@@ -92,6 +92,4 @@ async def process_youtube_shorts(message: types.Message):
 
 if __name__=='__main__':
     dp.setup_middleware(LoggingMiddleware())
-    loop=asyncio.new_event_loop()
-    loop.create_task(dp.start_polling())
-    loop.run_forever()
+    asyncio.run(dp.start_polling(timeout=70,reset_webhook=False,fast=False))
