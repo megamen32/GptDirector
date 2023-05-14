@@ -32,8 +32,8 @@ async def chatgpt_request(prompt):
     response=await openai.ChatCompletion.acreate(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are popular blogger that explain scenario in russian language, as it was for children. Пиши на русском."},
-            {"role": "assistant", "content": prompt}],
+            {"role": "system", "content": "You are popular blogger that explain scenario in russian language, as it was for children."},
+            {"role": "assistant", "content": f'транскрипция видео:"{prompt}"'}],
         temperature=0.8,
         max_tokens=400,
         n=1,
