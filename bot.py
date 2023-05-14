@@ -45,7 +45,7 @@ async def chatgpt_request(prompt):
 # Обработчик команды /start
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    await message.reply("Привет! Отправьте мне ссылку на видео YouTube Shorts, и я сделаю транскрипцию аудио и переведу сценарий на русский язык, а затем перескажу его молодежно и стильно от лица блогера 'Безработного'!")
+    await message.reply("Привет! Отправьте мне ссылку на видео YouTube Shorts, и я сделаю транскрипцию аудио и переведу сценарий на русский язык, а затем перескажу его молодежно и стильно от лица блогера!")
 
 
 video_cache={}
