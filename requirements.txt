@@ -4,3 +4,4 @@ aiogram~=2.25.1
 pydub~=0.25.1
 langdetect~=1.0.9
 beautifulsoup4~=4.12.2
+pyttsx3
