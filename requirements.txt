@@ -10,3 +10,4 @@ youtube_dl
 speech_recognition-fork
 yt-dlp
 gtts
+redis
