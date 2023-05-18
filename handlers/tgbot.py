@@ -76,7 +76,7 @@ async def process_youtube_shorts(message: types.Message):
         video_path= await video_path_task
         # Send video with the generated script
         with open(video_path, 'rb') as video_file:
-            await message.reply_video(video=InputFile(video_file), caption=gpt_response)
+            await message.reply_document(InputFile(video_file), caption=gpt_response)
         # Remove the downloaded video file
         os.remove(video_path)
     else:
