@@ -33,7 +33,7 @@ async def download_video(video_id,message):
 
 
     with open(video_path, 'rb') as video_file:
-        await message.reply_document(video=InputFile(video_file))
+        await message.reply_document(InputFile(video_file))
 
     return video_path
 
