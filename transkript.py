@@ -22,7 +22,7 @@ async def download_video(video_id,message):
     video_path = f"{video_id}.mp4"
 
     ydl_opts = {
-        'format': 'best[ext=mp4][height<=1080][fps<=30]+bestaudio/best[ext=m4a]',
+        'format': 'best[ext=mp4]',
         'outtmpl': video_path,
         'quiet': True,
         'merge_output_format': 'mp4'
