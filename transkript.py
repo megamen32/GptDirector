@@ -68,7 +68,7 @@ def download_audio_and_transcribe(video_id):
             # Используйте SpeechRecognition для преобразования аудио в текст
             import whisper
 
-            model = whisper.load_model("medium")
+            model = whisper.load_model("small")
             result = model.transcribe(f"{video_id}.wav")
             text = (result["text"])
 
