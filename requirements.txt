@@ -9,5 +9,6 @@ python-decouple
 youtube_dl
 speech_recognition-fork
 yt-dlp
-gtts
+gtts~=2.3.2
 redis
+whisper.ai

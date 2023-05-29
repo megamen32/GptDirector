@@ -63,32 +63,17 @@ def download_audio_and_transcribe(video_id):
                 ydl.download([f"https://www.youtube.com/watch?v={video_id}"])
 
             audio = AudioSegment.from_file(temp_file_path)
-            audio.export("temp.wav", format="wav")
+            audio.export(f"{video_id}.wav", format="wav")
 
-            recognizer = sr.Recognizer()
+            # Используйте SpeechRecognition для преобразования аудио в текст
+            import whisper
 
-            with sr.AudioFile("temp.wav") as source:
-                audio_data = recognizer.record(source)
+            model = whisper.load_model("medium")
+            result = model.transcribe(f"{video_id}.wav")
+            text = (result["text"])
 
-            try:
-                description = get_video_description(video_id)
-                lang = langdetect.detect(description)
-            except:
-                lang = None
+            os.remove(f'{video_id}.wav')
 
-                # If the language is not detected or it is not English, try to recognize speech in Russian
-            if lang != 'en':
-                try:
-                    text = recognizer.recognize_google(audio_data, language='ru-RU', show_all=False)
-                except:
-                    text = recognizer.recognize_google(audio_data, language='en-US', show_all=False)
-
-                # If the language is detected as English, recognize speech in English
-            else:
-                try:
-                    text = recognizer.recognize_google(audio_data, language='en-US', show_all=False)
-                except:
-                    text = recognizer.recognize_google(audio_data, language='ru-RU', show_all=False)
 
             return text
 
