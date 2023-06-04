@@ -6,4 +6,4 @@ from handlers import dp
 
 if __name__=='__main__':
     dp.setup_middleware(LoggingMiddleware())
-    asyncio.run(dp.start_polling(timeout=70, reset_webhook=False, fast=False))
+    asyncio.run(dp.start_polling(timeout=70, reset_webhook=False, fast=True))

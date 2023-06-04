@@ -47,8 +47,9 @@ def get_video_description(video_id):
     description_element = soup.find("title")
     description = description_element.text.strip() if description_element else ""
     return description
-
+model=None
 def download_audio_and_transcribe(video_id):
+    global model
     with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
         temp_file_path = 'out.webm'
 
@@ -67,8 +68,8 @@ def download_audio_and_transcribe(video_id):
 
             # Используйте SpeechRecognition для преобразования аудио в текст
             import whisper
-
-            model = whisper.load_model("small")
+            if model is None:
+                model = whisper.load_model("small")
             result = model.transcribe(f"{video_id}.wav")
             text = (result["text"])
 

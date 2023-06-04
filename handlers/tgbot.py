@@ -1,10 +1,11 @@
 import asyncio
 import os
 import re
-
+import traceback
 
 from aiogram import types
 from aiogram.types import InputFile
+from openai.error import RateLimitError
 
 from loader import CHATGPT_API_KEY, dp,openai
 from transkript import download_video, download_audio_and_transcribe
@@ -16,21 +17,53 @@ def check_language(text):
         return "ru"
     else:
         return "en"
+from aiolimiter import AsyncLimiter
+# Create a rate limiter that allows 3 operations per minute
+rate_limiter = AsyncLimiter(3, 60)
+# Token is the __Secure-next-auth.session-token from chat.openai.com
+my_session_tokens = ['eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJoZGhmYTEyNEByYW1ibGVyLnJ1IiwiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsidXNlcl9pZCI6InVzZXIta3ZrNzRJWGxzWkZxRVZzR3FhMnFwR0hYIn0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJhdXRoMHw2M2Y1MmYyOWY4M2JkODE2ZTg4NzQ2OGIiLCJhdWQiOlsiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS92MSIsImh0dHBzOi8vb3BlbmFpLm9wZW5haS5hdXRoMGFwcC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg1MTAyMjc1LCJleHAiOjE2ODYzMTE4NzUsImF6cCI6IlRkSkljYmUxNldvVEh0Tjk1bnl5d2g1RTR5T282SXRHIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIn0.J586tB92Sd9W6A9DQGD6BcwoKAaQQlEzR9c8IsUnXwYbezh5mCS2lTtFtiBf1vKt2t1GPg0k-WaS5zkqbrob4A0IngaNpHqZsIh04D-0pGz9pyEjkwwJvNhi7uQ9WdkTGwLsPKdx-oBto23OjcGgnv-OyWG2Vsm5nukgGe3escVikAZtzWO0visHiV_3p-97JIh5OCYF_R4Zfip5vGyWi16YuIDV1UssBCk1nF30-C-_-uyohSyGZZZ0HAE47YgiKXkqhnNrqbUKVcMhGndpaQ2eTDTcOFegZ2ASkpsvqPpceJnwhYaja5XGXga-ZsDITNMw0H4jDWOsnHYzNYPdVw']
 
+my_session_tokens = reversed(my_session_tokens)
 
-async def chatgpt_request(prompt):
-    response=await openai.ChatCompletion.acreate(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are popular blogger that explain scenario in russian language, as it was for children."},
-            {"role": "assistant", "content": f'транскрипция видео:"{prompt}"'}],
-        temperature=0.8,
-        max_tokens=400,
-        n=1,
-    )
-    res = response['choices'][0]['message']['content']
+llm = None
+cur_token_index = 0
+async def chatgpt_request(prompt,gpt3=False):
+    if gpt3:
+        while True:
+            try:
+                async with rate_limiter:
+                    response = await openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "Ты помощник, который переписывает сценарии, упрощая сложные термины и сокращая лишний текст. Помни, что твоя аудитория - дети, которые понимают только русский язык. Твоя задача - сделать сценарий доступным и понятным, не включая лишнюю информацию. Сформулируй ответ так, чтобы он мог быть произнесён за одну минуту."
+                            },
+                            {
+                                "role": "user",
+                                "content": f'транскрипция видео:"{prompt}"'
+                            }
+                        ],
+                        max_tokens=400,  # Уменьшение max_tokens, чтобы соответствовать длине одной минуты речи.
+                    )
 
-    return res
+                    res = response['choices'][0]['message']['content']
+
+                    return res
+            except RateLimitError as error:
+                traceback.print_exc()
+                await asyncio.sleep(20)
+                continue
+    else:
+        from gpt4_openai import GPT4OpenAI
+        global llm, cur_token_index
+        if llm is None:
+            llm = [GPT4OpenAI(token=token, headless=True, model='gpt-4') for token in my_session_tokens]
+        # GPT3.5 will answer 8, while GPT4 should be smart enough to answer 10
+            prompt=f'Ты помощник, который переписывает сценарии, упрощая сложные термины и сокращая лишний текст. Помни, что твоя аудитория - дети, которые понимают только русский язык. Твоя задача - сделать сценарий доступным и понятным, не включая лишнюю информацию. Сформулируй ответ так, чтобы он мог быть произнесён за одну минуту. Video transkript:\n"{prompt}"'
+        response = llm[cur_token_index](prompt)
+        return response
+
 
 
 @dp.message_handler(commands=['start'])
