@@ -21,13 +21,12 @@ from aiolimiter import AsyncLimiter
 # Create a rate limiter that allows 3 operations per minute
 rate_limiter = AsyncLimiter(3, 60)
 # Token is the __Secure-next-auth.session-token from chat.openai.com
-my_session_tokens = ['eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJoZGhmYTEyNEByYW1ibGVyLnJ1IiwiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsidXNlcl9pZCI6InVzZXIta3ZrNzRJWGxzWkZxRVZzR3FhMnFwR0hYIn0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJhdXRoMHw2M2Y1MmYyOWY4M2JkODE2ZTg4NzQ2OGIiLCJhdWQiOlsiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS92MSIsImh0dHBzOi8vb3BlbmFpLm9wZW5haS5hdXRoMGFwcC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg1MTAyMjc1LCJleHAiOjE2ODYzMTE4NzUsImF6cCI6IlRkSkljYmUxNldvVEh0Tjk1bnl5d2g1RTR5T282SXRHIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIn0.J586tB92Sd9W6A9DQGD6BcwoKAaQQlEzR9c8IsUnXwYbezh5mCS2lTtFtiBf1vKt2t1GPg0k-WaS5zkqbrob4A0IngaNpHqZsIh04D-0pGz9pyEjkwwJvNhi7uQ9WdkTGwLsPKdx-oBto23OjcGgnv-OyWG2Vsm5nukgGe3escVikAZtzWO0visHiV_3p-97JIh5OCYF_R4Zfip5vGyWi16YuIDV1UssBCk1nF30-C-_-uyohSyGZZZ0HAE47YgiKXkqhnNrqbUKVcMhGndpaQ2eTDTcOFegZ2ASkpsvqPpceJnwhYaja5XGXga-ZsDITNMw0H4jDWOsnHYzNYPdVw']
-
+my_session_tokens = ['eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJoZGhmYTEyNEByYW1ibGVyLnJ1IiwiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsidXNlcl9pZCI6InVzZXIta3ZrNzRJWGxzWkZxRVZzR3FhMnFwR0hYIn0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJhdXRoMHw2M2Y1MmYyOWY4M2JkODE2ZTg4NzQ2OGIiLCJhdWQiOlsiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS92MSIsImh0dHBzOi8vb3BlbmFpLm9wZW5haS5hdXRoMGFwcC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg2MzEyODQ2LCJleHAiOjE2ODc1MjI0NDYsImF6cCI6IlRkSkljYmUxNldvVEh0Tjk1bnl5d2g1RTR5T282SXRHIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBtb2RlbC5yZWFkIG1vZGVsLnJlcXVlc3Qgb3JnYW5pemF0aW9uLnJlYWQgb3JnYW5pemF0aW9uLndyaXRlIn0.Rmwv55D2gNG--Kmm433y7mbJuVm2V2LNz0nU9bgs_6_JmBNvzZk_PBh7bCPBBrDQIGhlaxf1nqr_PhTKsCYqe7w2CJaSaFdK7_HEpLGIKSetrn4Bpl2BAholzd2dXtLq9B1vacgEwGoTjVyYOZyqLcV3poCXVq5wt8Pii9awDILRnJM3yEdeGys9r7vGOxQEFTlMGOBkpMwwC6hL7l5FQMLimK2ZMDadyyCNeFAOrhIM9Jk99toO_GaDoRPbkRkfEJeacDQ9mt3_ldYsr7VopkIDOjB_aLMdr-bpJzqSVu9cbRRmywr4lbk1YB-rvN3jZzTcQD97npc-088ROE98Aw']
 my_session_tokens = reversed(my_session_tokens)
 
 llm = None
 cur_token_index = 0
-async def chatgpt_request(prompt,gpt3=False):
+async def chatgpt_request(prompt,gpt3=True):
     if gpt3:
         while True:
             try:
@@ -74,12 +73,12 @@ async def start(message: types.Message):
 video_cache={}
 
 
-@dp.message_handler(content_types=types.ContentType.TEXT, regexp='^(https://youtube\.com/shorts/)')
+@dp.message_handler(content_types=types.ContentType.TEXT, regexp='^(https://youtube\.com/)')
 async def process_youtube_shorts(message: types.Message):
     text = message.text.strip()
     msg = await message.reply(text)
 
-    if not text.startswith('https://youtube.com/shorts/') and not text.startswith('https://youtu.be/'):
+    if not text.startswith('https://youtube.com/') and not text.startswith('https://youtu.be/'):
         await message.reply("Пожалуйста, отправьте действительную ссылку на видео YouTube Shorts.")
         return
 
