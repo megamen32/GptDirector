@@ -31,7 +31,7 @@ async def chatgpt_request(prompt,gpt3=True):
         while True:
             try:
                 async with rate_limiter:
-                    response = await openai.ChatCompletion.create(
+                    response = await openai.ChatCompletion.acreate(
                         model="gpt-3.5-turbo",
                         messages=[
                             {

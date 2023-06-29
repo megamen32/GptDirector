@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import langdetect
+import openai
 import youtube_dl
 import speech_recognition as sr
 from pydub import AudioSegment
@@ -67,11 +68,8 @@ def download_audio_and_transcribe(video_id):
             audio.export(f"{video_id}.wav", format="wav")
 
             # Используйте SpeechRecognition для преобразования аудио в текст
-            import whisper
-            if model is None:
-                model = whisper.load_model("small")
-            result = model.transcribe(f"{video_id}.wav")
-            text = (result["text"])
+            result=openai.Audio.transcribe('whisper-1', open(f"{video_id}.wav", 'rb'))
+            text = result["text"]
 
             os.remove(f'{video_id}.wav')
 
