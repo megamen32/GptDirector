@@ -91,7 +91,7 @@ async def download_and_process_video(platform, video_id, message):
     with open(video_path, 'rb') as video_file:
         await message.reply_document(InputFile(video_file))
     return transcript_text
-@dp.message_handler(content_types=types.ContentType.TEXT, regexp='^(https://youtube\.com/)')
+@dp.message_handler(content_types=types.ContentType.TEXT)
 async def process_youtube_shorts(message: types.Message):
     text = message.text.strip()
     msg = await message.reply(text)
