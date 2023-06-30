@@ -1,6 +1,7 @@
 import asyncio
 import os
 import tempfile
+import traceback
 
 import langdetect
 import openai
@@ -23,25 +24,29 @@ def detect_language(text):
 
 
 
-async def download_video(platform, video_id, message):
-    video_path = f"{video_id}.mp4"
+async def download_video(url, message):
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            video_path=temp_file.name
+            ydl_opts = {
+                "format": "bestvideo/best",
+                "outtmpl": video_path + ".%(ext)s",
+                "quiet": True,
+            }
 
-    ydl_opts = {
-        'format': 'best[ext=mp4]',
-        'outtmpl': video_path,
-        'quiet': True,
-        'merge_output_format': 'mp4'
-    }
+            with YoutubeDL(ydl_opts) as ydl:
+                info_dict = ydl.extract_info(url, download=True)
+                audio_extension = info_dict.get("ext", "mp4")
+                temp_file_path_with_extension = video_path + "." + audio_extension
+            try:
+                await message.reply_document(InputFile(temp_file_path_with_extension))
+            except :
+                traceback.print_exc()
+            return temp_file_path_with_extension
+    except:
+        traceback.print_exc()
+        return None
 
-    url = f"https://www.youtube.com/watch?v={video_id}" if platform == 'youtube' else f"https://yappy.media/video/{video_id}"
-
-    with YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-
-    with open(video_path, 'rb') as video_file:
-        await message.reply_document(InputFile(video_file))
-
-    return video_path
 
 
 import requests
@@ -54,40 +59,38 @@ def get_video_description(video_id):
     description_element = soup.find("title")
     description = description_element.text.strip() if description_element else ""
     return description
-model=None
-def download_audio_and_transcribe(platform,video_id):
+
+def download_audio_and_transcribe(url):
     global model
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
-        temp_file_path = 'out.webm'
+    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+        temp_file_path = temp_file.name
 
         ydl_opts = {
             "format": "bestaudio/best",
-            "outtmpl": temp_file_path,
+            "outtmpl": temp_file_path + ".%(ext)s",
             "quiet": True,
         }
 
         try:
-            url = f"https://www.youtube.com/watch?v={video_id}" if platform == 'youtube' else f"https://yappy.media/video/{video_id}"
-
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-            audio = AudioSegment.from_file(temp_file_path)
-            audio.export(f"{video_id}.wav", format="wav")
+                info_dict = ydl.extract_info(url, download=True)
+                audio_extension = info_dict.get("ext", "webm")
+                temp_file_path_with_extension = temp_file_path + "." + audio_extension
+            audio = AudioSegment.from_file(temp_file_path_with_extension)
+            # Создаем временный файл для конвертированного в wav аудио
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_wav_file:
+                audio.export(temp_wav_file.name, format="wav")
 
-            # Используйте SpeechRecognition для преобразования аудио в текст
-            result=openai.Audio.transcribe('whisper-1', open(f"{video_id}.wav", 'rb'))
-            text = result["text"]
+                # Используем SpeechRecognition для преобразования аудио в текст
+                result = openai.Audio.transcribe('whisper-1', open(temp_wav_file.name, 'rb'))
+                text = result["text"]
 
-            os.remove(f'{video_id}.wav')
-
-
-            return text
+                return text
 
         except Exception as e:
             print(f"Error downloading and transcribing audio: {e}")
             return None
-        finally:
-            os.remove(temp_file_path)
-            if os.path.exists("temp.wav"):
-                os.remove("temp.wav")
+
+
+
 
