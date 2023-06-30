@@ -72,44 +72,39 @@ async def start(message: types.Message):
 
 video_cache={}
 
+from aiogram.types import InputFile
+async def download_and_process_video(platform, video_id, message):
+    video_path_task = asyncio.create_task(download_video(platform, video_id, message))
+    transcript_text = await download_audio_and_transcribe(platform, video_id)
 
+    if not transcript_text:
+        await message.reply("Не удалось распознать речь в данном видео.")
+        return
+
+    msg = await message.reply(transcript_text)
+    prompt = f"Вот транскрипция видео: {transcript_text}. " \
+              "Теперь переведи на русский и перескажи его для детей от лица блогера:"
+    gpt_response = await chatgpt_request(transcript_text)
+    await msg.edit_text(transcript_text+'\n____\n'+gpt_response)
+
+    video_path = await video_path_task
+    with open(video_path, 'rb') as video_file:
+        await message.reply_document(InputFile(video_file))
+    return transcript_text
 @dp.message_handler(content_types=types.ContentType.TEXT, regexp='^(https://youtube\.com/)')
 async def process_youtube_shorts(message: types.Message):
     text = message.text.strip()
     msg = await message.reply(text)
+    transcript_text=None
+    if text.startswith('https://youtube.com/') or text.startswith('https://youtu.be/'):
+        video_id = text.split('/')[-1].split('?')[0]
+        transcript_text=await download_and_process_video('youtube', video_id, message)
+    elif text.startswith('https://yappy.media/video/'):
+        video_id = text.split('/')[-1]
+        transcript_text=await download_and_process_video('yappy', video_id, message)
+    elif text.startswith('https://yappy.media/s/'):
+        video_id = text.split('/')[-1]
+        transcript_text=await download_and_process_video('yappy', video_id, message)
 
-    if not text.startswith('https://youtube.com/') and not text.startswith('https://youtu.be/'):
-        await message.reply("Пожалуйста, отправьте действительную ссылку на видео YouTube Shorts.")
-        return
-
-    video_id = text.split('/')[-1].split('?')[0]
-    # Check if the video text is already cached
-    video_path_task = asyncio.create_task(download_video(video_id,message))
-
-    if text in video_cache:
-        transcript_text = video_cache[text]
     else:
-        transcript_text =await asyncio.get_running_loop().run_in_executor(None, download_audio_and_transcribe,(video_id))
-        if transcript_text:
-            video_cache[text] = transcript_text  # Cache the video text
-        else:
-            await message.reply("Не удалось распознать речь в данном видео.")
-            return
-    await msg.edit_text(transcript_text)
-
-
-    if transcript_text:
-
-        prompt = f"Вот транскрипция видео: {transcript_text}. " \
-                  "Теперь переведи на русский и перескажи его для детей от лица блогера:"
-        gpt_response = await chatgpt_request(transcript_text)
-        await msg.edit_text(transcript_text+'\n____\n'+gpt_response)
-
-        video_path= await video_path_task
-        # Send video with the generated script
-        with open(video_path, 'rb') as video_file:
-            await message.reply_document(InputFile(video_file), caption=gpt_response)
-        # Remove the downloaded video file
-        os.remove(video_path)
-    else:
-        await message.reply("Не удалось распознать речь в данном видео.")
+        return await message.reply("Пожалуйста, отправьте действительную ссылку на видео YouTube Shorts или Yappy.")

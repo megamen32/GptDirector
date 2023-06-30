@@ -9,7 +9,18 @@ import openai
 
 from loader import dp,bot,openai
 from aiogram import types
+def count_tokens(history):
+    regex_russian = re.compile(r'[а-яА-ЯёЁ]+')
+    regex_other = re.compile(r'\b\w+\b')
+    c_russian = c_other = 0
+    for msg in history:
+        russian_tokens = regex_russian.findall(msg['content'])
+        c_russian += len(russian_tokens)
 
+        other_tokens = regex_other.findall(msg['content'])
+        other_tokens = [t for t in other_tokens if not regex_russian.search(t)]
+        c_other += len(other_tokens)
+    return c_russian*3.5+c_other
 
 async def generate_song():
     response = await openai.ChatCompletion.acreate(
