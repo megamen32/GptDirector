@@ -108,6 +108,7 @@ async def download_and_process_video(url, message):
     video_path = await video_path_task
     with open(video_path, 'rb') as video_file:
         await message.reply_document(InputFile(video_file),caption=gpt_response)
+    os.remove(video_path)
     return gpt_response
 
 @dp.message_handler(content_types=types.ContentType.TEXT)
