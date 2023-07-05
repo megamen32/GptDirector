@@ -3,9 +3,12 @@ import os
 import re
 import traceback
 
+import aiogram.utils.markdown
+import requests
 import yt_dlp
 from aiogram import types
 from aiogram.types import InputFile
+from bs4 import BeautifulSoup
 from openai.error import RateLimitError
 
 from loader import CHATGPT_API_KEY, dp, openai
@@ -82,7 +85,26 @@ video_cache = {}
 from aiogram.types import InputFile
 
 
-async def download_and_process_video(url, message):
+def find_interesting_word(transcript_text):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform([transcript_text])
+
+    # получаем отсортированный по важности список ключевых слов
+    feature_names = vectorizer.get_feature_names_out()
+    keywords = [feature_names[index] for index in X.toarray().argsort()[0][::-1]]
+
+    # выбираем самое длинное и важное ключевое слово для вставки ссылки
+    long_keywords = list(filter(lambda x: len(x) > 4, keywords))
+
+    if not long_keywords:
+        return keywords[0] if keywords else None  # fallback to the most important word, or None if no words
+
+    return long_keywords[0]  # the most important among long keywords
+
+
+async def download_and_process_video(url, message,news=False):
     # Проверка поддержки URL
     ie_list = yt_dlp.extractor.gen_extractor_classes()
     for ie in ie_list:
@@ -102,14 +124,42 @@ async def download_and_process_video(url, message):
     msg = await message.reply(transcript_text)
     prompt = f"Вот транскрипция видео: {transcript_text}. " \
              "Теперь переведи на русский и перескажи его для детей от лица блогера:"
-    gpt_response = await chatgpt_request(transcript_text)
-    await msg.edit_text(transcript_text + '\n____\n' + gpt_response)
+    if news:
 
-    video_path = await video_path_task
-    with open(video_path, 'rb') as video_file:
-        await message.reply_document(InputFile(video_file),caption=gpt_response)
-    os.remove(video_path)
+
+        interesting_word = find_interesting_word(transcript_text)
+        vid_url = extract_video_url(url)
+        linked_word = aiogram.utils.markdown.hlink(interesting_word , vid_url)
+
+        # Replace the interesting word in the original transcript.
+        gpt_response = transcript_text.replace(interesting_word, linked_word)
+        await msg.edit_text(gpt_response,parse_mode='HTML')
+    else:
+
+        gpt_response = await chatgpt_request(transcript_text)
+        await msg.edit_text(transcript_text + '\n____\n' + gpt_response)
+
+        video_path = await video_path_task
+        with open(video_path, 'rb') as video_file:
+            await message.reply_document(InputFile(video_file),caption=gpt_response)
+        os.remove(video_path)
     return gpt_response
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+}
+
+def extract_video_url(yappy_url):
+    #return yappy_url
+    r = requests.get(yappy_url, headers=headers)
+    soup = BeautifulSoup(r.content, 'html.parser')
+    video_tag = soup.find('video')
+    return video_tag['src']
+
+@dp.message_handler(regexp=r'^https://yappy\.media/s/.*$')
+async def process_yappy_link(message: types.Message):
+    yappy_url = message.text.strip()
+    await download_and_process_video(yappy_url, message,news=True)
+
 
 @dp.message_handler(content_types=types.ContentType.TEXT)
 async def process_youtube_shorts(message: types.Message):
