@@ -106,22 +106,23 @@ def find_interesting_word(transcript_text):
 
 async def download_and_process_video(url, message,news=False):
     # Проверка поддержки URL
+    msg=await message.reply(f'start downloading from {url}')
     ie_list = yt_dlp.extractor.gen_extractor_classes()
     for ie in ie_list:
         if ie.suitable(url):
             break
     else:
-        await message.reply("Не могу загрузить это видео. Пожалуйста, отправьте действительную ссылку на видео.")
+        await msg.edit_text("Не могу загрузить это видео. Пожалуйста, отправьте действительную ссылку на видео.")
         return
 
     video_path_task = asyncio.create_task(download_video(url, message))
     transcript_text = await asyncio.get_running_loop().run_in_executor(None,download_audio_and_transcribe,(url))
 
     if not transcript_text:
-        await message.reply("Не удалось распознать речь в данном видео.")
+        await msg.edit_text("Не удалось распознать речь в данном видео.")
         return
 
-    msg = await message.reply(transcript_text)
+    msg = await msg.edit_text(transcript_text)
     prompt = f"Вот транскрипция видео: {transcript_text}. " \
              "Теперь переведи на русский и перескажи его для детей от лица блогера:"
     if news:

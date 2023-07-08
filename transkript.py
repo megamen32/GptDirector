@@ -24,28 +24,40 @@ def detect_language(text):
 
 
 
+
+
 async def download_video(url, message):
     try:
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            video_path=temp_file.name
+            video_path = temp_file.name
             ydl_opts = {
                 "format": "bestvideo/best",
                 "outtmpl": video_path + ".%(ext)s",
+                "postprocessors": [{
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                }],
                 "quiet": True,
             }
 
             with YoutubeDL(ydl_opts) as ydl:
                 info_dict = ydl.extract_info(url, download=True)
                 audio_extension = info_dict.get("ext", "mp4")
-                temp_file_path_with_extension = video_path + "." + audio_extension
+                temp_file_path_with_extension = video_path + "." + 'mp4'
+                if os.path.exists(temp_file_path_with_extension):
+                    pass
+                else:
+                    temp_file_path_with_extension = video_path + "." + audio_extension
             try:
                 await message.reply_document(InputFile(temp_file_path_with_extension))
-            except :
+            except:
                 traceback.print_exc()
             return temp_file_path_with_extension
     except:
         traceback.print_exc()
         return None
+
+
 
 
 
