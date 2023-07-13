@@ -31,7 +31,7 @@ async def download_video(url, message):
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             video_path = temp_file.name
             ydl_opts = {
-                "format": "bestvideo/best",
+                  "format": "bestvideo+bestaudio/best",
                 "outtmpl": video_path + ".%(ext)s",
                 "postprocessors": [{
                     'key': 'FFmpegVideoConvertor',
