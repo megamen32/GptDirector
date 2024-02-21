@@ -63,7 +63,7 @@ async def download_video(url, message):
 
 import requests
 from bs4 import BeautifulSoup
-
+from sspipe import p,px
 def get_video_description(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
     response = requests.get(url)
@@ -92,7 +92,8 @@ def download_audio_and_transcribe(url):
             # Создаем временный файл для конвертированного в wav аудио
             with tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_wav_file:
                 audio.export(temp_wav_file.name, format="wav")
-
+                proxy='socks5://user109086:ku4sz6@146.247.105.173:17867'
+                #openai.requestssession = lambda: (sess := requests.Session(), setattr(sess, 'proxies', {'http': proxy, 'https': proxy}), sess)[-1]
                 # Используем SpeechRecognition для преобразования аудио в текст
                 result = openai.Audio.transcribe('whisper-1', open(temp_wav_file.name, 'rb'))
                 text = result["text"]

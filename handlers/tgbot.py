@@ -166,3 +166,49 @@ async def process_yappy_link(message: types.Message):
 async def process_youtube_shorts(message: types.Message):
     text = message.text.strip()
     await download_and_process_video(text, message)
+
+async def transcribe_video(video_path):
+    result = model.transcribe(video_path)
+    return result["text"]
+
+
+async def transcribe_audio(file_path):
+    # Конвертация файла в формат WAV
+    audio = AudioSegment.from_file(file_path)
+    with tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_wav_file:
+        audio.export(temp_wav_file.name, format="wav")
+
+        # Загрузка файла в OpenAI для транскрипции
+        with open(temp_wav_file.name, 'rb') as audio_file:
+            response = openai.Audio.transcribe(
+                engine="whisper-1",
+                file=audio_file,
+                format="wav"
+            )
+            text = response["data"]["text"]
+
+            return text
+
+@dp.message_handler(content_types=['video', 'video_note'])
+async def handle_video(message: types.Message):
+    if not os.path.exists('downloads'):
+        os.makedirs('downloads')
+    # Сохранение видео
+    video_file = await message.video.download(destination_file=f"downloads/{message.video.file_id}.mp4")
+
+    # Транскрипция видео
+    transcription = await transcribe_audio(video_file.name)
+
+    # Отправка транскрипции или файла
+    if len(transcription) <= 4000:
+        await message.reply(transcription)
+    else:
+        # Сохранение транскрипции в файл
+        transcript_file_path = f"downloads/{message.video.file_id}.txt"
+        with open(transcript_file_path, "w") as transcript_file:
+            transcript_file.write(transcription)
+        await message.reply_document(InputFile(transcript_file_path))
+
+        # Опционально: удаление файла после отправки
+        os.remove(video_file.name)
+        os.remove(transcript_file_path)
